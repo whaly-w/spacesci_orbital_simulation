@@ -4,7 +4,7 @@ import math
 pygame.init()
 
 # Setup display
-WIDTH, HEIGHT = 800, 800
+WIDTH, HEIGHT = 1600, 900
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Planet Simulation')
 
@@ -17,7 +17,7 @@ typer = pygame.font.SysFont('comicsans', 16)
 class Planet():
     AU = 149.6e9 # unit in m
     G = 6.67428e-11
-    SCALE = 200 / AU # -> 1AU = 100px
+    SCALE = 100 / AU # -> 1AU = 100px
     TIMESTEP = 3600 * 24 # 1 day
     
     def __init__(self, x, y, radius, color, mass, shift_factor= (1, 1), scale_factor= 1, isSun= False):
@@ -42,8 +42,8 @@ class Planet():
         x_zoom, y_zoom = scale_timestep * self.scale_factor, scale_timestep * self.scale_factor
         
         
-        x = (self.x * self.SCALE * x_zoom) + HEIGHT/2 + x_shift
-        y = (self.y * self.SCALE * y_zoom) + WIDTH/2 + y_shift
+        x = (self.x * self.SCALE * x_zoom) + WIDTH/2 + x_shift
+        y = (self.y * self.SCALE * y_zoom) + HEIGHT/2 + y_shift
         
         if len(self.orbit) > 2:
             scaled_points = []
@@ -117,28 +117,47 @@ def main():
     run = True
     clock = pygame.time.Clock()
     
-    Sun = Planet(0, 0, 30, (252, 243, 0), 1.98892e30, isSun= True, shift_factor= (100, 0))
+    Sun = Planet(0, 0, 20, (252, 243, 0), 1.98892e30, isSun= True)
     
-    Earth = Planet(-1 * Planet.AU, 0, 16, (72, 149, 239), 5.9742e24, shift_factor= (100, 0))
-    Earth.y_vel = 29.783e3
-    
-    Mars = Planet(-1.524 * Planet.AU, 0, 12, (220, 47, 2), 6.39e23, shift_factor= (100, 0))
-    Mars.y_vel = 24.077e3
-    
-    Mercury = Planet(0.387 * Planet.AU, 0, 8, (108, 117, 125), 3.3e23, shift_factor= (100, 0))
+    Mercury = Planet(0.387 * Planet.AU, 0, 1.5, (128, 128, 128), 3.3e23)
     Mercury.y_vel = -47.4e3
     
-    Venus = Planet(0.723 * Planet.AU, 0, 14, (255, 255, 255), 4.8685e24, shift_factor= (100, 0))
+    Venus = Planet(0.723 * Planet.AU, 0, 2, (255, 255, 224), 4.8685e24)
     Venus.y_vel = -35.03e3
     
+    Earth = Planet(-1 * Planet.AU, 0, 6, (72, 149, 239), 5.9742e24)
+    Earth.y_vel = 29.783e3
+    
+    Mars = Planet(-1.524 * Planet.AU, 0, 5, (220, 47, 2), 6.42e23)
+    Mars.y_vel = 24.077e3
+    
+    Jupiter = Planet(5.2 * Planet.AU, 0, 15, (245, 222, 179), 1.898e27)
+    Jupiter.y_vel = -13.07e3
+    Jupiter.SCALE /= 2
+    Jupiter.TIMESTEP *= 30
+    
+    Saturn = Planet(9.58 * Planet.AU, 0, 12, (205, 133, 63), 5.68e26)
+    Saturn.y_vel = -9.69e3
+    Saturn.SCALE /= 3
+    Saturn.TIMESTEP *= 50
+    
+    Uranus = Planet(19.22 * Planet.AU, 0, 10, (173, 216, 230), 8.68e25)
+    Uranus.y_vel = -6.81e3
+    Uranus.SCALE /= 4.8
+    Uranus.TIMESTEP *= 100
+    
+    Neptune = Planet(30 * Planet.AU, 0 , 10, (0, 0, 139), 1.02e26)
+    Neptune.y_vel = -5.43e3
+    Neptune.SCALE /= 6.2
+    Neptune.TIMESTEP *= 100
     
     
     
-    planets = [Sun, Mercury, Venus, Earth, Mars]
+    planets = [Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
     t_pos = 0
     t_scale = 1
     while run: 
-        clock.tick(60)
+        # clock.tick(360)
         win.fill((0, 0, 0))
         
         # setup background color
