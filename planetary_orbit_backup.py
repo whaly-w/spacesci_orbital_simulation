@@ -84,16 +84,16 @@ class Satellite(Planet):
         # if self.t >= self.T_day/2:
         #     return True
         
-        vel = math.sqrt(self.target.x_vel ** 2 + self.target.y_vel ** 2)
-        # print('target angle', int(math.degrees(47.4e3 * self.T / (0.39 * Planet.AU)))%360)
-        # print(self.T)q
+        # vel = math.sqrt(self.target.x_vel ** 2 + self.target.y_vel ** 2)
+        # # print('target angle', math.degrees(47.4e3 * self.T / self.target.distance_to_sun))
+        # print(self.T)
         # # print('angel', (self.origin.theta_degree - self.target.theta_degree), 180 + math.degrees(vel * self.T / self.target.distance_to_sun))
-        if abs((self.origin.theta_degree - self.target.theta_degree) - 
-               (180 - int(math.degrees(47.4e3 * self.T /2 / (0.39 * Planet.AU)))%360 )) < 10 and start:
-            self.launch = True
+        # if abs((self.origin.theta_degree - self.target.theta_degree) - (180 - int(vel * (self.T /self.target.distance_to_sun))%360)) < 2 and start:
+        #     self.launch = True
             
+    
 
-        if not self.launch:
+        if self.launch:
             self.x = self.origin.x
             self.y = self.origin.y
             self.launch_theta = math.atan2(self.y, self.x)
@@ -101,8 +101,8 @@ class Satellite(Planet):
             x = self.semi_major * math.cos(2 * math.pi * self.t / self.T_day + math.radians(180)) + self.offset
             y = self.semi_minor * math.sin(2 * math.pi * self.t / self.T_day + math.radians(180))
         
-            self.x, self.y = self.transform_rotation(x, y, -1 * self.launch_theta) 
-            # self.x, self.y = self.transform_rotation(x, y, 0) 
+            # self.x, self.y = self.transform_rotation(x, y, -1 * self.launch_theta) 
+            self.x, self.y = self.transform_rotation(x, y, 0) 
         # self.launch_theta = math.atan2(self.y, self.x)
             self.t += 1  
             
@@ -176,7 +176,6 @@ def main():
     pause = False
     start = False
     t = 0
-    stat = False
     while run: 
         clock.tick(60)
         win.fill((0, 0, 0))
@@ -194,24 +193,36 @@ def main():
             planet.update_position(Sun)  
              
         spaceJ.draw(win)
-        spaceJ.update_hohmann_transfer(start)
-
-        if c_frame > 60:
-            start = True
+        stat = spaceJ.update_hohmann_transfer(start)
+        # print(math.degrees(Earth.theta))
+        # if c_frame >= 240 and abs(math.degrees(abs(Earth.theta - Mercury.theta)) - 180) < 1:
+        # if not pause and spaceJ.launch:
+        #     print(spaceJ.x, spaceJ.y)
+        #     # print(math.degrees(spaceJ.launch_theta))
+        #     # delay(2)
+        #     t+= 1
+        if c_frame > spaceJ.T_day/2:
+            stat = True
+        
+        
         
         if spaceJ.launch and not pause:
             pause = True
             print(math.degrees(Earth.theta), math.degrees(Mercury.theta))
             delay(2)
+
+            
+        # if math.sqrt(()**2 + ()**2) 
         
-        if math.sqrt((spaceJ.x - Mercury.x)**2 + (spaceJ.y - Mercury.y)**2) < 5e9:
-            stat = True
-        # print(math.sqrt((spaceJ.x - Mercury.x)**2 + (spaceJ.y - Mercury.y)**2))
 
-
+        
+        # t_pos += 0.05
+        # t_scale += 0.01
+        # print(f'pos: {t_pos:.2f}, scale: {t_scale:.2f}')
         c_frame+= 1
+        # if not stop: pygame.display.update()
         
-        
+        # if t < 3: 
         if not stat: 
             pygame.display.update()
                 
