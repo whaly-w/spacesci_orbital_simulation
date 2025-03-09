@@ -92,8 +92,9 @@ class Satellite(Planet):
         self.offset = (abs(target.x) - abs(origin.x))/2
         self.planet_velocity = abs(target.y_vel)
         self.planet_distance_from_Sun = abs(target.distance_from_Sun)
+        error_compensate = 0.99 if self.origin.distance_from_Sun / self.target.distance_from_Sun > 2 else 1
         
-        self.semi_major = (abs(origin.x) + abs(target.x))/2
+        self.semi_major = (abs(origin.x) + abs(target.x))/2 * error_compensate
         self.semi_minor = math.sqrt(abs(origin.x) * abs(target.x))
         self.T = math.sqrt((4 * math.pi**2 / (Sun.G * Sun.mass)) * (self.semi_major)**3) / 2
         self.T_day = self.T / 86400
@@ -103,7 +104,7 @@ class Satellite(Planet):
         self.orbit = []
     
     def update_hohmann_transfer(self, start, min_distance= 3e9):
-        error_compensate = 14 if self.origin.distance_from_Sun / self.target.distance_from_Sun > 3 else 0
+        error_compensate = 14 if self.origin.distance_from_Sun / self.target.distance_from_Sun > 3  or self.target.mass / self.origin.mass < 0.06 else 0
         # print((self.origin.theta_degree - self.target.theta_degree), 180 - int(math.degrees(self.planet_velocity * self.T /2 /self.planet_distance_from_Sun))%360)
         vel = math.sqrt(self.target.x_vel ** 2 + self.target.y_vel ** 2)
         if abs((self.origin.theta_degree - self.target.theta_degree) - 

@@ -57,11 +57,11 @@ def main():
     origin_planet = Mars
     target_planet = Mercury
     
-    # spaceJ.hohmann_transfer(origin_planet, target_planet, Sun)
+    spaceJ.hohmann_transfer(origin_planet, target_planet, Sun)
     
     # global variables
     planets = [Sun, Mercury, Venus, Earth, Mars]
-    state = -1
+    state = 2
     c_frame = 0 # 1 frame = 1 day
     txt_list = []
     
