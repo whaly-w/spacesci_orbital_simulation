@@ -1,9 +1,11 @@
 import pygame
 import math
-from Planet import Planet
-from screen_setup import *
+from Control.Planet import Planet
+from Control.Satellite import Satellite
+from Control.screen_setup import *
 import copy
 from time import sleep as delay
+import Assets
 
 pygame.init()
 
@@ -12,132 +14,16 @@ win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Planet Simulation')
 
 
-class Satellite(Planet):
-    TIMESTEP = 3600 * 24
-    
-    def __init__(self, x, y, size, color, mass, shift_factor= (1, 1), scale_factor= 1):
-        self.x = x
-        self.y = y
-        self.color = color
-        self.mass = mass
-        self.vertices = [(size * math.cos(i * 2*math.pi/3), size * math.sin(i * 2*math.pi/3)) for i in range(0, 3)]
-        
-        self.x_vel = 0
-        self.y_vel = 0
-        
-        self.shift_factor = shift_factor
-        self.scale_factor = scale_factor
-        
-        self.offset = 0
-        self.orbit_position = (0, 0)
-        self.target_planet = None
-        self.orbit = []
-        
-        self.count= 0
-        
-    def draw(self, win, shift_timestep= 0, scale_timestep= 1):
-        pygame.draw.polygon(win, self.color, [(
-            x  + (self.x + self.orbit_position[0]) * self.SCALE + WIDTH/2, 
-            y  + (self.y + self.orbit_position[1]) * self.SCALE + HEIGHT/2
-            ) for (x,y) in self.vertices])
-           
-    
-    def orbit_setup(self, planet, distance_from_planet):
-        self.x = distance_from_planet
-        self.target_planet = planet
-        self.orbit_position = (planet.x, planet.y)
-        
-        self.y_vel = math.sqrt(Planet.G * planet.mass / abs(distance_from_planet))
-        print(self.y_vel)
-        
-    def update_orbit(self):
-        fx, fy = self.attraction(self.target_planet)
-        total_fx = fx
-        total_fy = fy
-            
-        self.x_vel += total_fx / self.mass * self.TIMESTEP
-        self.y_vel += total_fy / self.mass * self.TIMESTEP
-        
-        self.x += self.x_vel * self.TIMESTEP
-        self.y += self.y_vel * self.TIMESTEP
-        
-        self.orbit.append((self.x, self.y))
-        
-        
-    def hohmann_transfer(self, origin, target, Sun):
-        self.origin = origin
-        self.target = target
-        self.offset = (abs(target.x) - abs(origin.x))/2
-        
-        self.semi_major = (abs(origin.x) + abs(target.x))/2
-        self.semi_minor = math.sqrt(abs(origin.x) * abs(target.x))
-        self.T = math.sqrt((4 * math.pi**2 / (Sun.G * Sun.mass)) * (self.semi_major)**3) / 2
-        self.T_day = self.T / 86400
-        
-        self.t = 0
-        self.launch = False
-    
-    
-    def update_hohmann_transfer(self, start):
-        
-        
-        # if self.t >= self.T_day/2:
-        #     return True
-        
-        vel = math.sqrt(self.target.x_vel ** 2 + self.target.y_vel ** 2)
-        # print('target angle', int(math.degrees(47.4e3 * self.T / (0.39 * Planet.AU)))%360)
-        # print(self.T)q
-        # # print('angel', (self.origin.theta_degree - self.target.theta_degree), 180 + math.degrees(vel * self.T / self.target.distance_to_sun))
-        if abs((self.origin.theta_degree - self.target.theta_degree) - 
-               (180 - int(math.degrees(47.4e3 * self.T /2 / (0.39 * Planet.AU)))%360 )) < 10 and start:
-            self.launch = True
-            
-
-        if not self.launch:
-            self.x = self.origin.x
-            self.y = self.origin.y
-            self.launch_theta = math.atan2(self.y, self.x)
-        else:
-            x = self.semi_major * math.cos(2 * math.pi * self.t / self.T_day + math.radians(180)) + self.offset
-            y = self.semi_minor * math.sin(2 * math.pi * self.t / self.T_day + math.radians(180))
-        
-            self.x, self.y = self.transform_rotation(x, y, -1 * self.launch_theta) 
-            # self.x, self.y = self.transform_rotation(x, y, 0) 
-        # self.launch_theta = math.atan2(self.y, self.x)
-            self.t += 1  
-            
-            
-            
-        return False
-            
-            
-        
-    def transform_rotation(self, x, y, angle):
-        ''' angle: in radian '''
-        return -1 * (x * math.cos(angle) - y * math.sin(angle)), x * math.sin(angle) + y * math.cos(angle)
-        
-        
-        
-
 # Infinte loop
 def main():
     run = True
     clock = pygame.time.Clock()
     
-    Sun = Planet('Sun', 0, 0, 40, (252, 243, 0), 1.98892e30, isSun= True)
-    
-    Mercury = Planet('Mercuty', 0.387 * Planet.AU, 0, 8, (128, 128, 128), 3.3e23)
-    Mercury.y_vel = -47.4e3
-    
-    Venus = Planet('Venus', 0.723 * Planet.AU, 0, 14, (255, 255, 224), 4.8685e24)
-    Venus.y_vel = -35.03e3
-    
-    Earth = Planet('Earth', -1 * Planet.AU, 0, 16, (72, 149, 239), 5.9742e24)
-    Earth.y_vel = 29.783e3
-    # Earth.theta = math.pi / 2
-    
-    Mars = Planet('Mars', -1.524 * Planet.AU, 0, 12, (220, 47, 2), 6.42e23)
-    Mars.y_vel = 24.077e3
+    Sun = Planet('Sun', 0, 0, 40, (252, 243, 0), 1.98892e30, img= r"Assets\the Sun GIF.gif", isSun= True)
+    Mercury = Planet('Mercuty', 0.387 * Planet.AU, 0, 8, (128, 128, 128), 3.3e23, orbital_velocity= -47.4e3)
+    Venus = Planet('Venus', 0.723 * Planet.AU, 0, 14, (255, 255, 224), 4.8685e24, orbital_velocity= -35.03e3)
+    Earth = Planet('Earth', -1 * Planet.AU, 0, 16, (72, 149, 239), 5.9742e24, orbital_velocity= 29.783e3)
+    Mars = Planet('Mars', -1.524 * Planet.AU, 0, 12, (220, 47, 2), 6.42e23, orbital_velocity= 24.077e3)
     
     # Jupiter = Planet(5.2 * Planet.AU, 0, 15, (245, 222, 179), 1.898e27)
     # Jupiter.y_vel = -13.07e3
@@ -160,15 +46,30 @@ def main():
     # Neptune.TIMESTEP *= 100
     
     spaceJ = Satellite(0, 0, 12, (255, 255, 255), 5e5) # 5
-    spaceJ.hohmann_transfer(Earth, Mercury, Sun)
-    # spaceJ.orbit_setup(Earth, 1)
-    # mission = HahmannTransfer(spaceJ, Earth, Mercury, Sun)
+    # spaceJ.hohmann_transfer(Mercury, Mars, Sun)
+    # spaceJ.hohmann_transfer(Mars, Mercury, Sun)
     
+    # spaceJ.hohmann_transfer(Mercury, Venus, Sun)
+    # spaceJ.hohmann_transfer(Mercury, Earth, Sun)
+    # spaceJ.hohmann_transfer(Mercury, Mars, Sun)
     
+    # spaceJ.hohmann_transfer(Venus, Mercury, Sun)
+    spaceJ.hohmann_transfer(Venus, Earth, Sun)
+    # spaceJ.hohmann_transfer(Venus, Mars, Sun)
+    
+    # spaceJ.hohmann_transfer(Earth, Mercury, Sun)
+    # spaceJ.hohmann_transfer(Earth, Venus, Sun)
+    # spaceJ.hohmann_transfer(Earth, Mars, Sun)
+    
+    # spaceJ.hohmann_transfer(Mars, Mercury, Sun)
+    # spaceJ.hohmann_transfer(Mars, Venus, Sun)
+    # spaceJ.hohmann_transfer(Mars, Earth, Sun)
     
     
     
     planets = [Sun, Mercury, Venus, Earth, Mars]
+    state = 1
+    
     # t_pos = 0
     # t_scale = 1
     c_frame = 0 # 1 frame = 1 day
@@ -176,44 +77,59 @@ def main():
     pause = False
     start = False
     t = 0
-    stat = False
+    arrived = False
     while run: 
+        ####################################### Setup
+        # Screen setup
         clock.tick(60)
         win.fill((0, 0, 0))
         
-        # setup background color
-        # win.fill(_white)
-            
+        # Exit when press 'Q'
         for event in pygame.event.get():
             if event.type == 771:
                 run = False
                 
-        for planet in planets:
-            # planet.draw(win, shift_timestep= math.sin(t_pos), scale_timestep= t_scale)  
-            planet.draw(win)
-            planet.update_position(Sun)  
-             
-        spaceJ.draw(win)
-        spaceJ.update_hohmann_transfer(start)
+              
+        ###################################### State Manuever
+        if state == 1 and True:
+            state = 2
+            c_frame = 0
+        elif state == 2 and arrived:
+            state = 3
+          
 
-        if c_frame > 60:
-            start = True
+                
         
-        if spaceJ.launch and not pause:
-            pause = True
-            print(math.degrees(Earth.theta), math.degrees(Mercury.theta))
-            delay(2)
+        ###################################### State Operation
+        # Planet Orbit
+        if state == 2:
+            for planet in planets:
+                # planet.draw(win, shift_timestep= math.sin(t_pos), scale_timestep= t_scale)  
+                planet.draw(win)
+                planet.update_position(Sun)  
+                
+            spaceJ.draw(win)
+            arrived = spaceJ.update_hohmann_transfer(start)
+
+            if c_frame > 60:
+                start = True
         
-        if math.sqrt((spaceJ.x - Mercury.x)**2 + (spaceJ.y - Mercury.y)**2) < 5e9:
-            stat = True
-        # print(math.sqrt((spaceJ.x - Mercury.x)**2 + (spaceJ.y - Mercury.y)**2))
-
-
+            if spaceJ.launch and not pause:
+                pause = True
+                print(math.degrees(spaceJ.origin.theta), math.degrees(spaceJ.target.theta))
+                delay(1)
+                
+        
+        if state == 3:
+            for planet in planets:
+                planet.draw(win)
+                
+            spaceJ.draw(win)
+        
+        
+        
         c_frame+= 1
-        
-        
-        if not stat: 
-            pygame.display.update()
+        pygame.display.update()
                 
                 
     pygame.quit()
