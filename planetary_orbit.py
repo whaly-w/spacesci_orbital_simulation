@@ -155,12 +155,10 @@ def main():
             c_frame = 0
             
             spaceJ.orbit_setup(target_planet)
-            txt_list = [f'Initial Velocity: {spaceJ.get_first_cosmic_speed()/1000:.2f} km/s',
+            txt_list = [f'Final Velocity: {spaceJ.get_first_cosmic_speed()/1000:.2f} km/s',
                         f'Orbital Period: {int(spaceJ.T):,} s']
             
             
-          
-        print(state)
                 
         
         ###################################### State Operation
