@@ -21,7 +21,6 @@ class TextWriter():
         self.t = 1
         self._color = [int(255/20 * c) for c in range(0, 21)]
         self._color = self._color + [self._color[i] for i in range(19, 0, -1)]
-        print(self._color)
         
     def reset(self):
         self.t = 1
@@ -47,7 +46,6 @@ class TextWriter():
         
     def write_pulsing(self, msg, pos, win, c_frame, freq= 5):
         txt_color = [self._color[int(c_frame/freq) % len(self._color)] for _ in range(3)]
-        print(txt_color)
         info = self.typer.render(msg, 1, txt_color)
         win.blit(info, (pos[0] - info.get_width()/2, pos[1]))
         
@@ -179,7 +177,7 @@ def main():
             spaceJ.update_orbit()
             
             if state == 5 or True:
-                global_typer.write_pulsing('Press ENTER to continue...', (WIDTH/2, HEIGHT/1.12), win, c_frame, freq=3)
+                global_typer.write_pulsing('Press SPACE to continue...', (WIDTH/2, HEIGHT/1.12), win, c_frame, freq=3)
             
         # Transition
         elif state == 1:
