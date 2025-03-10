@@ -115,6 +115,7 @@ class Planet():
         self.transition['target'] = end
         
         try:
+            print('got scale')
             self.transition['scale_factor'] = (end.scale_factor - start.scale_factor) / T
         except:
             self.transition['scale_factor'] = None
@@ -128,7 +129,8 @@ class Planet():
         if self.transition['scale_factor'] is not None:
             self.scale_factor = self.transition['target'].scale_factor if abs(self.scale_factor - self.transition['target'].scale_factor) < 0.5 else self.scale_factor + self.transition['scale_factor']
         
-        if self.x == self.transition['target'].x and self.y == self.transition['target'].y and self.scale_factor == self.transition['target'].scale_factor:
+        
+        if self.x == self.transition['target'].x and self.y == self.transition['target'].y and (self.scale_factor == self.transition['target'].scale_factor or self.transition['scale_factor'] is None):
             self.transition_success = True
     
 
