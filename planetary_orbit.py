@@ -1,6 +1,6 @@
 import pygame
 import math
-from Control.Planet import Planet
+from Control.Planet import Planet, Coordinate
 from Control.Satellite import Satellite
 from Control.screen_setup import *
 import copy
@@ -23,6 +23,19 @@ class TextWriter():
     def reset(self):
         self.t = 1
         
+    def just_write(self, msg, pos, win, align= 0):
+        ''' align: 0-left, 1-center, 2-right'''
+        info = self.typer.render(msg, 1, self.color)
+        if align == 0:
+            win.blit(info, (pos[0], pos[1]))
+        elif align == 1:
+            win.blit(info, (pos[0] - info.get_width()/2, pos[1]))
+        else:
+            win.blit(info, (pos[0] - info.get_width(), pos[1]))
+            
+            
+        
+        
     def write(self, msg, pos, win, c_frame, T= 60):
         ln = len(msg)
         freq = T // ln
@@ -41,27 +54,30 @@ def main():
     clock = pygame.time.Clock()
     
     Sun = Planet('Sun', 0, 40, None, 1.98892e30, img= r"Assets\theSun@3x.png", isSun= True)
-    Mercury = Planet('Mercury', 0.387 * Planet.AU, 8, 2.439e6, 3.3e23, orbital_velocity= -47.4e3, img= r'Assets\Mercury@3x.png')
-    Venus = Planet('Venus', 0.723 * Planet.AU, 15, 6.025e6, 4.8685e24, orbital_velocity= -35.03e3, img = r'Assets\Venus@3x.png')
-    Earth = Planet('Earth', -1 * Planet.AU, 16, 6.371e6, 5.9742e24, orbital_velocity= 29.783e3, img= r'Assets\Earth@3x.png')
-    Mars = Planet('Mars', -1.524 * Planet.AU, 11, 3.389e6, 6.42e23, orbital_velocity= 24.077e3, img= r'Assets\Mars@3x.png')
+    Mercury = Planet('Mercury', 0.387 * Planet.AU, 8, 2.439e6, 3.3e23, orbital_velocity= -47.4e3, img= r'Assets\Mercury@3x.png', color= (128, 128, 128))
+    Venus = Planet('Venus', 0.723 * Planet.AU, 15, 6.025e6, 4.8685e24, orbital_velocity= -35.03e3, img = r'Assets\Venus@3x.png', color= (208, 108, 40))
+    Earth = Planet('Earth', -1 * Planet.AU, 16, 6.371e6, 5.9742e24, orbital_velocity= 29.783e3, img= r'Assets\Earth@3x.png', color= (72, 149, 239))
+    Mars = Planet('Mars', -1.524 * Planet.AU, 11, 3.389e6, 6.42e23, orbital_velocity= 24.077e3, img= r'Assets\Mars@3x.png', color= (220, 47, 2))
     
 
-    spaceJ = Satellite(0, 0, 12, (255, 255, 255), 5e5) # 5
+    spaceJ = Satellite(0, 0, 12, (255, 255, 255), 5e5, img= r'Assets\SpaceCraft@3x.png') # 5
     
     
-    global_typer = TextWriter('Assets\ROG_font.ttf', 32)
+    txt_url = r'Assets\ROG_font.ttf'
+    global_typer = TextWriter(txt_url, 32)
+    position_typer = TextWriter(txt_url, 12)
     
 
     # Target variable
-    origin_planet = Mars
-    target_planet = Mercury
+    origin_planet = Venus
+    target_planet = Earth
     
-    spaceJ.hohmann_transfer(origin_planet, target_planet, Sun)
+    # spaceJ.hohmann_transfer(origin_planet, target_planet, Sun)
     
-    # global variables
+    # global variableserror_compensate
     planets = [Sun, Mercury, Venus, Earth, Mars]
-    state = 2
+    state = -1 
+    # state = 2
     c_frame = 0 # 1 frame = 1 day
     txt_list = []
     
@@ -90,9 +106,7 @@ def main():
             c_frame = 0
             
             spaceJ.orbit_setup(origin_planet)
-            vel = math.sqrt(Planet.G * spaceJ.target.mass / (1.5e6 + spaceJ.target.actual_radius))
-            # vel = f'{int(vel):,}' if vel > 1000 else f'{vel:.2f}'
-            txt_list = [f'Initial Velocity: {vel/1000:.2f} km/s',
+            txt_list = [f'Initial Velocity: {spaceJ.get_first_cosmic_speed()/1000:.2f} km/s',
                         f'Orbital Period: {int(spaceJ.T):,} s']
             
         if state == 0 and c_frame > 60 * 10:
@@ -110,19 +124,48 @@ def main():
                 planet.transition_setup(planet, planet.initial_setup)
                 
         if state == 1 and spaceJ.transition_success:
-            state = 2
-            c_frame = 0
-            spaceJ.hohmann_transfer(origin_planet, target_planet, Sun)
+            all_success = True
+            for planet in planets:
+                if not planet.transition_success:
+                    all_success = False
+            if all_success:
+                state = 2
+                c_frame = 0
+                spaceJ.hohmann_transfer(origin_planet, target_planet, Sun)
+                
+                global_typer.reset()
+                txt_list = [f'Planet Orbital Velocity: {abs(int(target_planet.initial_setup.orbital_velocity/1000)):,} km/s',
+                            f'Transfer Velocity: {spaceJ.get_hohmann_speed(Sun)/1000:.2f} km/s',
+                            f'Transfer Period: {int(spaceJ.T_day):,} days']
             
         elif state == 2 and arrived:
+            c_frame = 0
             state = 3
+            
+        elif state == 3 and c_frame > 60 * 10:
+            state = 4
+            c_frame = 0
+            
+            spaceJ.orbit_setup(target_planet, move= False)
+            spaceJ.transition_setup(spaceJ, Coordinate(spaceJ.orbit_position, 0, None, None))
+            target_planet.transition_setup(target_planet, Coordinate(0, 0, spaceJ.orbit_scale, None))
+            
+        elif state == 4 and spaceJ.transition_success and target_planet.transition_success:
+            state = 5
+            c_frame = 0
+            
+            spaceJ.orbit_setup(target_planet)
+            txt_list = [f'Initial Velocity: {spaceJ.get_first_cosmic_speed()/1000:.2f} km/s',
+                        f'Orbital Period: {int(spaceJ.T):,} s']
+            
+            
           
-
+        print(state)
                 
         
         ###################################### State Operation
         # Planet Orbit
-        if state == 0:
+        if state == 0 or state == 5:
             global_typer.write(txt_list[0], (WIDTH/20, HEIGHT/10), win, c_frame)
             global_typer.write(txt_list[1], (WIDTH/20, HEIGHT/10 + 50), win, c_frame)
             spaceJ.target.draw(win)
@@ -144,9 +187,17 @@ def main():
             origin_planet.draw(win)
             spaceJ.draw(win)
             
+        # Hohmann Transition
+        elif state == 2:
+            if not pause:
+                global_typer.write(txt_list[0], (WIDTH/20, HEIGHT/10), win, c_frame)
+            else:
+                global_typer.just_write(txt_list[0], (WIDTH/20, HEIGHT/10), win)
+                global_typer.write(txt_list[1], (WIDTH/20, HEIGHT/10 + 50), win, c_frame)
+                global_typer.write(txt_list[2], (WIDTH/20, HEIGHT/10 + 100), win, c_frame)
+                
+            # global_typer.write(txt_list[1], (WIDTH/20, HEIGHT/10 + 50), win, c_frame)
             
-
-        if state == 2:
             for planet in planets:
                 # planet.draw(win, shift_timestep= math.sin(t_pos), scale_timestep= t_scale)  
                 planet.draw(win)
@@ -160,15 +211,36 @@ def main():
         
             if spaceJ.launch and not pause:
                 pause = True
-                print(math.degrees(spaceJ.origin.theta), math.degrees(spaceJ.target.theta))
-                delay(1)
-                
-        
-        if state == 3:
+                global_typer.reset()
+                print()
+                position_typer.just_write('Launch Position', 
+                                          (origin_planet.x * target_planet.SCALE + WIDTH/2, origin_planet.y * target_planet.SCALE + HEIGHT/2 + 20), 
+                                          win, align= 1)
+                pygame.display.update()
+                delay(3)    
+                  
+        # Pause and wait
+        elif state == 3:
             for planet in planets:
                 planet.draw(win)
-                
             spaceJ.draw(win)
+            global_typer.just_write(txt_list[0], (WIDTH/20, HEIGHT/10), win)
+            global_typer.just_write(txt_list[1], (WIDTH/20, HEIGHT/10 + 50), win)
+            global_typer.just_write(txt_list[2], (WIDTH/20, HEIGHT/10 + 100), win)
+        
+         # Transition
+        elif state == 4:
+            target_planet.update_transition()
+            spaceJ.update_transition()
+            
+            target_planet.draw(win)
+            spaceJ.draw(win)
+            
+            
+            
+        
+      
+            
         
         
         

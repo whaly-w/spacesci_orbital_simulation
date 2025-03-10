@@ -6,6 +6,7 @@ from .screen_setup import _yellow
 
 class Satellite(Planet):
     TIMESTEP = 3600 * 24
+    orbit_scale = HEIGHT/70
     
     def __init__(self, x, y, size, color, mass, img= None, shift_factor= (1, 1), scale_factor= 1):
         self.x = x
@@ -16,7 +17,7 @@ class Satellite(Planet):
         # self.size = size
         
         if img is not None:
-            self.img = pygame.transform.scale(pygame.image.load(img).convert_alpha(), (size *2, size *2))
+            self.img = pygame.transform.scale(pygame.image.load(img).convert_alpha(), (size *4, size *4))
         else:
             self.img = None
         
@@ -61,15 +62,15 @@ class Satellite(Planet):
             pygame.draw.lines(win, _yellow, False, scaled_points)
            
     
-    def orbit_setup(self, planet):
+    def orbit_setup(self, planet, move= True):
         # Planet setup
         self.target = planet
-        self.target.scale_factor = HEIGHT/70 #HEIGHT /5 /self.target.radius 
-        self.target.x = 0
+        self.target.scale_factor = self.orbit_scale if move else self.target.scale_factor
+        self.target.x = 0 if move else self.target.x
         
         # Satellite setup
-        self.orbit_position = (-1.4 * self.target.radius * self.target.scale_factor /planet.SCALE)
-        self.x = self.orbit_position
+        self.orbit_position = (-1.4 * self.target.radius * self.orbit_scale /planet.SCALE)
+        self.x = self.orbit_position if move else self.x
         # self.orbit_position = 1500  # for calculation
 
         self.t = 0
@@ -83,7 +84,6 @@ class Satellite(Planet):
         
         self.orbit.append((self.x, self.y))
         self.t += 1
-        
         
         
     def hohmann_transfer(self, origin, target, Sun):
@@ -131,7 +131,6 @@ class Satellite(Planet):
             return False
       
         
-
     def transform_rotation(self, x, y, angle):
         ''' angle: in radian '''
         return -1 * (x * math.cos(angle) - y * math.sin(angle)), x * math.sin(angle) + y * math.cos(angle)
@@ -141,3 +140,10 @@ class Satellite(Planet):
             return math.sqrt((self.x - planet.x)**2 + (self.y - planet.y)**2)
         else:
             return math.sqrt((object.x - planet.x)**2 + (object.y - planet.y)**2)
+    
+    
+    def get_first_cosmic_speed(self):
+        return math.sqrt(Planet.G * self.target.mass / (1.5e6 + self.target.actual_radius))
+    
+    def get_hohmann_speed(self, Sun):
+        return math.sqrt(2 * Planet.G * Sun.mass * (1/self.origin.distance_from_Sun - 1/(self.origin.distance_from_Sun + self.target.distance_from_Sun)))

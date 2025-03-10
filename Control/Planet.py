@@ -17,7 +17,7 @@ class Planet():
         self.actual_radius = actual_radius
         self.color = color
         self.mass = mass
-        self.initial_setup = Coordinate(distance_from_Sun, 0, 1)
+        self.initial_setup = Coordinate(distance_from_Sun, 0, 1, orbital_velocity)
         
         if img is not None:
             self.img = pygame.image.load(img)
@@ -133,10 +133,11 @@ class Planet():
     
 
 class Coordinate():
-    def __init__(self, x, y, scale):
+    def __init__(self, x, y, scale, orbital_velocity):
         self.x = x
         self.y = y
         self.scale_factor = scale
+        self.orbital_velocity = orbital_velocity
     
     def show(self):
         print(f'({self.x}, {self.y}) => {self.scale_factor}')
