@@ -1,11 +1,11 @@
 import pygame
 import math
-from Control.Planet import Planet, Coordinate
-from Control.Satellite import Satellite
-from Control.screen_setup import *
+from Planet import Planet, Coordinate
+from Satellite import Satellite
+from screen_setup import *
 import copy
 from time import sleep as delay
-import Assets
+import assets
 
 pygame.init()
 
