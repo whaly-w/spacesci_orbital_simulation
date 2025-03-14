@@ -302,7 +302,7 @@ def main(origin_planet_name=None, destination_planet_name=None):
             print(spaceJ.x)
             spaceJ.orbit_setup(target_planet,  position= -1 if spaceJ.x < 0 else 1, direction= -1)
             final_velocity = round(spaceJ.get_first_cosmic_speed()/1000, 2)
-            final_velocity_Sun = round(final_velocity_Sun + abs(target_planet.initial_setup.orbital_velocity/1000), 2)
+            final_velocity_Sun = round(final_velocity + abs(target_planet.initial_setup.orbital_velocity/1000), 2)
             txt_list = [f'Final Velocity: {final_velocity} km/s',
                         f'Orbital Period: {int(spaceJ.T_day):,} min']
             
